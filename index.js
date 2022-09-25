@@ -9,6 +9,7 @@ require('dotenv').config()
 
 // json web token
 var jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 
 // middleware
 app.use(cors())
@@ -136,6 +137,19 @@ async function run( ){
             res.send(result)
         })
 
+        // ------------Payment 
+        app.post('/create-payment-intent',verifyJWT, async (req, res) => {
+            const service = req.body
+            const price = service.price
+            const amount = price * 100
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency:'usd',
+                payment_method_types:['card']
+            })
+            console.log(paymentIntent.id)
+            res.send({clientSecret:paymentIntent.client_secret})
+        })
          
             // ------------------- down all put api ----------------
 
@@ -190,6 +204,17 @@ async function run( ){
               return  res.status(403).send({message:'forbidden access'})
             }
            
+        })
+
+        // update sold tool for payment (payment page)
+        app.put('/moneypayment/:id', async(req, res) => {
+            const id = req.params.id
+            const filter = {_id:ObjectId(id)}
+            const soldTool = req.body
+            const options = {upsert:true}
+            const updateDoc = {$set:{...soldTool}}
+            const result =  await soldToolsCollection.updateOne(filter,updateDoc ,options)
+            res.send(result)
         })
 
 
