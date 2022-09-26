@@ -157,11 +157,14 @@ async function run( ){
         // update api for sell tool quantity  buy tool page (user)
          app.put('/tool/:id', async(req , res) => {
             const id = req.params.id
+            console.log(id)
             const filter ={_id:ObjectId(id)}
             const data = req.body
+            console.log(data)
             const options = { upsert: true };
             const updateDoc = {$set: {...data } };
             const result = await toolsCollection.updateOne(filter, updateDoc, options);
+            console.log(result)
             res.send(result);
          })
          
